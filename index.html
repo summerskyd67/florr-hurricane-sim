@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Florr.io Atlantic Hurricane Season Simulator</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -18,14 +20,16 @@
         }
     </script>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; touch-action: manipulation; }
         body { background-color: #0b1118; color: #f1f5f9; font-family: 'Ubuntu', sans-serif; user-select: none; overflow: hidden; }
         .florr-panel { background: rgba(18, 26, 38, 0.95); border: 2px solid #283952; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); border-radius: 12px; }
         .florr-card { background: #141e2b; border: 1.5px solid #2a3d56; border-radius: 8px; }
         .florr-btn { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #38ef7d 0%, #11998e 100%); border: 2px solid #66ffa3; border-radius: 999px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); transition: all 0.15s ease; cursor: pointer; }
         .florr-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        .florr-btn:active { transform: translateY(1px) scale(0.97); }
         .florr-btn-danger { background: linear-gradient(180deg, #ff416c 0%, #ff4b2b 100%); border-color: #ff8e8e; }
         .florr-btn-blue { background: linear-gradient(180deg, #00c6ff 0%, #0072ff 100%); border-color: #72dbff; }
+        .florr-btn-purple { background: linear-gradient(180deg, #b224ef 0%, #7579ff 100%); border-color: #e28eff; }
         
         .cat-td { background: #5ebaff; color: #000; }
         .cat-ts { background: #00fafc; color: #000; }
@@ -43,32 +47,38 @@
 <body class="h-screen w-screen flex flex-col p-2 gap-2 text-xs">
 
     <!-- TOP CONTROL BAR -->
-    <header class="h-12 florr-panel px-3 flex items-center justify-between shrink-0">
+    <header class="h-auto min-h-[48px] florr-panel px-3 py-1 flex flex-wrap items-center justify-between shrink-0 gap-2">
         <div class="flex items-center space-x-2">
             <i class="fa-solid fa-hurricane text-xl text-emerald-400 animate-spin" style="animation-duration: 8s;"></i>
-            <h1 class="font-florr text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                FLORR.IO HURRICANE SEASON SIMULATOR
-            </h1>
+            <div>
+                <h1 class="font-florr text-sm sm:text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 leading-tight">
+                    FLORR.IO HURRICANE SIMULATOR
+                </h1>
+                <p class="text-[9px] text-slate-400 font-medium">Atlantic Basin Hub</p>
+            </div>
         </div>
 
-        <div class="flex items-center space-x-3 bg-[#0a1017] px-3 py-1 rounded-xl border border-[#233348]">
-            <span id="date-text" class="font-florr text-sm text-yellow-300 font-bold">Jan 01</span>
-            <span id="year-text" class="text-[10px] text-slate-400">YEAR 1 (2025)</span>
+        <div class="flex items-center space-x-2 bg-[#0a1017] px-2.5 py-1 rounded-xl border border-[#233348]">
+            <span id="date-text" class="font-florr text-xs sm:text-sm text-yellow-300 font-bold">Jan 01</span>
+            <span id="year-text" class="text-[9px] text-slate-400">YEAR 1 (2025)</span>
+            <span class="text-slate-600">|</span>
+            <span id="enso-text" class="text-teal-300 font-bold text-[10px]">ENSO: Neutral</span>
         </div>
 
-        <!-- VISIBLE MAP MODES -->
-        <div class="flex bg-[#0a1017] p-0.5 rounded-lg border border-[#233348] text-[11px] font-bold">
-            <button id="mode-track" class="px-2.5 py-1 rounded-md bg-teal-600 text-white">TRACK</button>
-            <button id="mode-sst" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white">SST</button>
-            <button id="mode-radar" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white">RADAR</button>
+        <!-- VISIBLE MAP MODES (TRACK | SST | RADAR | SATELLITE) -->
+        <div class="flex bg-[#0a1017] p-0.5 rounded-lg border border-[#233348] text-[10px] font-bold">
+            <button id="mode-track" class="px-2 py-1 rounded bg-teal-600 text-white">TRACK</button>
+            <button id="mode-sst" class="px-2 py-1 rounded text-slate-400 hover:text-white">SST</button>
+            <button id="mode-radar" class="px-2 py-1 rounded text-slate-400 hover:text-white">RADAR</button>
+            <button id="mode-sat" class="px-2 py-1 rounded text-slate-400 hover:text-white">SATELLITE</button>
         </div>
 
         <div class="flex items-center space-x-1.5">
-            <button id="btn-day" class="florr-btn px-3 py-1 text-xs font-bold">+1 DAY</button>
-            <button id="btn-week" class="florr-btn florr-btn-blue px-3 py-1 text-xs font-bold">+1 WK</button>
-            <button id="btn-auto" class="florr-btn florr-btn-danger px-3 py-1 text-xs font-bold">AUTO</button>
-            <button id="btn-spawn" class="w-7 h-7 rounded-full bg-[#1c2a3c] text-teal-300 border border-[#354c6c] flex items-center justify-center font-bold" title="Spawn Storm">
-                <i class="fa-solid fa-plus"></i>
+            <button id="btn-day" class="florr-btn px-2.5 py-1 text-xs font-bold">+1 DAY</button>
+            <button id="btn-week" class="florr-btn florr-btn-blue px-2.5 py-1 text-xs font-bold">+1 WK</button>
+            <button id="btn-auto" class="florr-btn florr-btn-danger px-2.5 py-1 text-xs font-bold">AUTO</button>
+            <button id="btn-spawn" class="w-7 h-7 rounded-full bg-[#1c2a3c] text-teal-300 border border-[#354c6c] flex items-center justify-center font-bold hover:text-white" title="Spawn Storm">
+                <i class="fa-solid fa-plus text-xs"></i>
             </button>
         </div>
     </header>
@@ -84,15 +94,16 @@
 
             <!-- Active Storms Bar -->
             <div id="storm-bar" class="h-16 bg-[#0f1722] border-t border-[#233348] p-1.5 flex space-x-2 overflow-x-auto shrink-0 items-center">
-                <div class="w-full text-center text-slate-500 font-florr italic">No active tropical cyclones in the Atlantic Basin.</div>
+                <div class="w-full text-center text-slate-500 font-florr italic text-xs">No active tropical cyclones in the Atlantic Basin.</div>
             </div>
         </section>
 
         <!-- SIDEBAR: NEWSFEED & RECORDS -->
         <aside class="w-full lg:w-80 flex flex-col gap-2 shrink-0 h-1/2 lg:h-full overflow-hidden">
+            <!-- FLORR MOB NEWSFEED -->
             <div class="flex-1 florr-panel flex flex-col overflow-hidden min-h-0">
                 <div class="p-2 bg-[#162130] border-b border-[#283952] flex items-center space-x-2 shrink-0">
-                    <div class="w-8 h-8 rounded-lg bg-[#0b1118] border border-amber-400 flex items-center justify-center font-florr text-amber-300 font-bold">🌸</div>
+                    <div class="w-8 h-8 rounded-lg bg-[#0b1118] border border-amber-400 flex items-center justify-center font-florr text-amber-300 font-bold text-sm">🌸</div>
                     <div>
                         <div class="font-florr font-bold text-amber-300 text-xs">Florr Mob Weather Council</div>
                         <p class="text-[9px] text-slate-400">Atlantic Tropical Bulletins</p>
@@ -101,15 +112,16 @@
                 <div id="feed" class="flex-1 p-2 overflow-y-auto space-y-2"></div>
             </div>
 
+            <!-- STATS & HALL OF FAME -->
             <div class="h-36 florr-panel p-2 flex flex-col shrink-0">
-                <div class="font-florr font-bold text-cyan-300 border-b border-[#283952] pb-1 mb-1 flex justify-between">
+                <div class="font-florr font-bold text-cyan-300 border-b border-[#283952] pb-1 mb-1 flex justify-between text-xs">
                     <span>Season Statistics</span>
-                    <span id="retired-count" class="text-red-400">0 Retired</span>
+                    <span id="retired-count" class="text-red-400 font-bold">0 Retired</span>
                 </div>
                 <div class="grid grid-cols-3 gap-1 mb-1 text-center font-mono">
-                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">NAMED</div><div id="st-named" class="font-bold text-white">0</div></div>
-                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">HURRICANES</div><div id="st-hurr" class="font-bold text-yellow-400">0</div></div>
-                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">DAMAGE</div><div id="st-dmg" class="font-bold text-emerald-400">$0M</div></div>
+                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">NAMED</div><div id="st-named" class="font-bold text-white text-xs">0</div></div>
+                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">HURRICANES</div><div id="st-hurr" class="font-bold text-yellow-400 text-xs">0</div></div>
+                    <div class="florr-card p-1"><div class="text-[8px] text-slate-400">DAMAGE</div><div id="st-dmg" class="font-bold text-emerald-400 text-xs">$0M</div></div>
                 </div>
                 <div id="retired-list" class="flex-1 florr-card p-1 overflow-y-auto flex flex-wrap gap-1 text-[9px]">
                     <span class="text-slate-500 italic">No retired names yet.</span>
@@ -129,7 +141,7 @@
         let currentDay = 1;
         let isAuto = false;
         let autoTimer = null;
-        let mapMode = 'track'; // 'track', 'sst', 'radar'
+        let mapMode = 'track'; // 'track', 'sst', 'radar', 'sat'
 
         let activeStorms = [];
         let totalNamed = 0, totalHurricanes = 0, totalDamage = 0;
@@ -139,6 +151,7 @@
         let width = 0, height = 0;
 
         function resize() {
+            if (!canvas || !canvas.parentElement) return;
             width = canvas.parentElement.clientWidth;
             height = canvas.parentElement.clientHeight;
             canvas.width = width;
@@ -166,13 +179,16 @@
 
             if (mapMode === 'sst') {
                 drawSSTHeatmap();
+            } else if (mapMode === 'sat') {
+                ctx.fillStyle = '#0a1628';
+                ctx.fillRect(0, 0, width, height);
             } else {
                 ctx.fillStyle = '#09131f';
                 ctx.fillRect(0, 0, width, height);
             }
 
-            ctx.fillStyle = mapMode === 'sst' ? 'rgba(20, 28, 38, 0.7)' : '#182433';
-            ctx.strokeStyle = '#2d4059';
+            ctx.fillStyle = mapMode === 'sst' ? 'rgba(20, 28, 38, 0.7)' : (mapMode === 'sat' ? '#121e2e' : '#182433');
+            ctx.strokeStyle = mapMode === 'sat' ? '#1d2d42' : '#2d4059';
             ctx.lineWidth = 1.5;
 
             COASTLINES.forEach(poly => {
@@ -188,6 +204,7 @@
             });
 
             activeStorms.forEach(s => drawStorm(s));
+            checkFujiwhara();
         }
 
         function drawSSTHeatmap() {
@@ -195,9 +212,7 @@
             for (let y = 0; y < height; y += step) {
                 const lat = 5 + (1 - y / height) * 45;
                 for (let x = 0; x < width; x += step) {
-                    const lon = -100 + (x / width) * 90;
                     const sst = 22 + Math.sin((currentMonth - 2) / 12 * Math.PI * 2) * 5 + (35 - lat) * 0.4;
-                    
                     if (sst < 25) ctx.fillStyle = 'rgba(10, 50, 120, 0.6)';
                     else if (sst < 27.5) ctx.fillStyle = 'rgba(20, 140, 180, 0.6)';
                     else if (sst < 29) ctx.fillStyle = 'rgba(220, 180, 30, 0.6)';
@@ -219,26 +234,29 @@
                 this.status = 'Active';
                 this.damage = 0;
                 this.lifespanDays = 0;
+                this.seed = Math.random() * 1000;
+                this.heading = -20;
             }
 
             update() {
                 if (this.status !== 'Active') return;
                 this.lifespanDays++;
 
-                let forwardSpeed = 0.8 + Math.random() * 0.5;
-                let directionAngle = -20;
+                let speed = 0.8 + Math.random() * 0.5;
 
-                if (this.lat > 25 && this.lat < 35) {
-                    directionAngle = 15;
-                    forwardSpeed *= 1.2;
-                } else if (this.lat >= 35) {
-                    directionAngle = 55;
-                    forwardSpeed *= 1.8;
+                if (this.lat < 25) {
+                    this.heading += (Math.random() - 0.5) * 2;
+                } else if (this.lat >= 25 && this.lat < 35) {
+                    this.heading += 3;
+                    speed *= 1.2;
+                } else {
+                    this.heading = 50 + (Math.random() * 5);
+                    speed *= 1.8;
                 }
 
-                const rad = (directionAngle * Math.PI) / 180;
-                this.lon += Math.sin(rad) * forwardSpeed;
-                this.lat += Math.cos(rad) * forwardSpeed * 0.6;
+                const rad = (this.heading * Math.PI) / 180;
+                this.lon += Math.sin(rad) * speed;
+                this.lat += Math.cos(rad) * speed * 0.6;
                 this.history.push({ lat: this.lat, lon: this.lon });
 
                 const isOverLand = (this.lon < -80 && this.lat > 25 && this.lat < 31) || (this.lon < -75 && this.lat >= 31);
@@ -277,6 +295,7 @@
             if (s.status !== 'Active') return;
             const p = latLonToCanvas(s.lat, s.lon);
 
+            // Draw Track History Line
             if (mapMode === 'track' && s.history.length > 1) {
                 ctx.beginPath();
                 ctx.strokeStyle = '#38bdf8';
@@ -289,11 +308,12 @@
                 ctx.stroke();
             }
 
+            // RADAR MODE
             if (mapMode === 'radar') {
                 const radius = Math.max(15, s.wind * 0.4);
                 const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, radius);
                 grad.addColorStop(0, 'rgba(0,0,0,0.8)');
-                grad.addColorStop(0.3, '#ff0000');
+                grad.addColorStop(0.3, s.wind > 100 ? '#ff0000' : '#ff9900');
                 grad.addColorStop(0.7, '#00cc44');
                 grad.addColorStop(1, 'rgba(0,200,200,0)');
                 ctx.fillStyle = grad;
@@ -302,14 +322,71 @@
                 ctx.fill();
             }
 
-            ctx.fillStyle = s.wind >= 74 ? '#ef4444' : '#06b6d4';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(5, s.wind / 12), 0, Math.PI * 2);
-            ctx.fill();
+            // SATELLITE MODE
+            if (mapMode === 'sat') {
+                const cloudRadius = Math.max(20, s.wind * 0.5);
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((Date.now() / 400 + s.seed) % (Math.PI * 2));
+
+                const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, cloudRadius);
+                grad.addColorStop(0, 'rgba(10, 10, 10, 0.9)'); // Eye
+                grad.addColorStop(0.15, 'rgba(245, 245, 255, 0.95)'); // Bright Eyewall
+                grad.addColorStop(0.5, 'rgba(210, 220, 235, 0.7)'); // Cloud Shield
+                grad.addColorStop(1, 'rgba(180, 200, 220, 0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, cloudRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Feeder Arms
+                ctx.strokeStyle = 'rgba(240, 245, 255, 0.4)';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < 4; i++) {
+                    ctx.rotate(Math.PI / 2);
+                    ctx.beginPath();
+                    ctx.arc(cloudRadius * 0.4, 0, cloudRadius * 0.5, 0, Math.PI * 0.8);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // FLORR ICON SPRITE
+            if (mapMode !== 'sat') {
+                ctx.fillStyle = s.wind >= 74 ? '#ef4444' : '#06b6d4';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(5, s.wind / 12), 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 9px Fredoka, sans-serif';
             ctx.fillText(`${s.name} (${s.getCat()})`, p.x + 8, p.y + 3);
+        }
+
+        function checkFujiwhara() {
+            const active = activeStorms.filter(s => s.status === 'Active');
+            for (let i = 0; i < active.length; i++) {
+                for (let j = i + 1; j < active.length; j++) {
+                    const s1 = active[i];
+                    const s2 = active[j];
+                    const p1 = latLonToCanvas(s1.lat, s1.lon);
+                    const p2 = latLonToCanvas(s2.lat, s2.lon);
+                    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+                    if (dist < 70) {
+                        s1.heading += 3;
+                        s2.heading -= 3;
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(236, 72, 153, 0.7)';
+                        ctx.lineWidth = 1.5;
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
         }
 
         function getNextAvailableName() {
@@ -337,77 +414,4 @@
             if (currentDay > 30) {
                 currentDay = 1;
                 currentMonth++;
-                if (currentMonth > 11) {
-                    currentMonth = 0;
-                    currentYear++;
-                }
-            }
-
-            const isPeak = currentMonth >= 5 && currentMonth <= 10;
-            if (Math.random() < (isPeak ? 0.12 : 0.02) && activeStorms.filter(s => s.status === 'Active').length < 4) {
-                spawnStorm();
-            }
-
-            activeStorms.forEach(s => s.update());
-
-            activeStorms.forEach(s => {
-                if (s.damage >= 5000 && !retiredNames.includes(s.name)) {
-                    retiredNames.push(s.name);
-                    addFeed('Beetle', `OFFICIAL: Name ${s.name} has been RETIRED due to major devastation!`);
-                }
-            });
-
-            activeStorms = activeStorms.filter(s => s.status === 'Active');
-            updateUI();
-            drawMap();
-        }
-
-        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-        function updateUI() {
-            document.getElementById('date-text').innerText = `${MONTHS[currentMonth]} ${currentDay < 10 ? '0' + currentDay : currentDay}`;
-            document.getElementById('year-text').innerText = `YEAR ${currentYear - 2024} (${currentYear})`;
-            
-            document.getElementById('st-named').innerText = totalNamed;
-            document.getElementById('st-hurr').innerText = activeStorms.filter(s => s.wind >= 74).length;
-            document.getElementById('st-dmg').innerText = `$${totalDamage}M`;
-            document.getElementById('retired-count').innerText = `${retiredNames.length} Retired`;
-
-            const bar = document.getElementById('storm-bar');
-            const active = activeStorms.filter(s => s.status === 'Active');
-            if (active.length === 0) {
-                bar.innerHTML = `<div class="w-full text-center text-slate-500 font-florr italic">No active tropical cyclones in the Atlantic Basin.</div>`;
-            } else {
-                bar.innerHTML = active.map(s => `
-                    <div class="florr-card p-1.5 min-w-[120px] shrink-0 border-l-4 border-l-teal-400">
-                        <div class="font-florr font-bold text-yellow-300 flex justify-between">
-                            <span>${s.name}</span>
-                            <span class="cat-${s.getCat().toLowerCase()} px-1 rounded text-[8px]">${s.getCat()}</span>
-                        </div>
-                        <div class="font-mono text-[10px] text-slate-300">${s.wind} mph | ${s.pressure} mb</div>
-                    </div>
-                `).join('');
-            }
-
-            const retList = document.getElementById('retired-list');
-            if (retiredNames.length === 0) {
-                retList.innerHTML = `<span class="text-slate-500 italic">No retired names yet.</span>`;
-            } else {
-                retList.innerHTML = retiredNames.map(n => `<span class="bg-red-950 border border-red-500 text-red-300 font-bold px-1 rounded">${n}</span>`).join('');
-            }
-        }
-
-        function addFeed(author, text) {
-            const feed = document.getElementById('feed');
-            const card = document.createElement('div');
-            card.className = "florr-card p-1.5 border-l-2 border-l-amber-400";
-            card.innerHTML = `<div class="font-florr text-amber-300 font-bold text-[10px]">${author}</div><p class="text-slate-300 text-[11px]">${text}</p>`;
-            feed.prepend(card);
-        }
-
-        // Mode Toggles
-        ['track', 'sst', 'radar'].forEach(m => {
-            document.getElementById(`mode-${m}`).onclick = () => {
-                mapMode = m;
-                ['track', 'sst', 'radar'].forEach(other => {
-                    document.getEleme
+              
