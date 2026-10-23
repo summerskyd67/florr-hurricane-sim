@@ -54,13 +54,18 @@
         <div class="flex items-center space-x-3 bg-[#0a1017] px-3 py-1 rounded-xl border border-[#233348]">
             <span id="date-text" class="font-florr text-sm text-yellow-300 font-bold">Jan 01</span>
             <span id="year-text" class="text-[10px] text-slate-400">YEAR 1 (2025)</span>
-            <span class="text-slate-600">|</span>
-            <span id="enso-text" class="text-teal-300 font-bold">ENSO: Neutral</span>
+        </div>
+
+        <!-- VISIBLE MAP MODES -->
+        <div class="flex bg-[#0a1017] p-0.5 rounded-lg border border-[#233348] text-[11px] font-bold">
+            <button id="mode-track" class="px-2.5 py-1 rounded-md bg-teal-600 text-white">TRACK</button>
+            <button id="mode-sst" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white">SST</button>
+            <button id="mode-radar" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white">RADAR</button>
         </div>
 
         <div class="flex items-center space-x-1.5">
             <button id="btn-day" class="florr-btn px-3 py-1 text-xs font-bold">+1 DAY</button>
-            <button id="btn-week" class="florr-btn florr-btn-blue px-3 py-1 text-xs font-bold">+1 WEEK</button>
+            <button id="btn-week" class="florr-btn florr-btn-blue px-3 py-1 text-xs font-bold">+1 WK</button>
             <button id="btn-auto" class="florr-btn florr-btn-danger px-3 py-1 text-xs font-bold">AUTO</button>
             <button id="btn-spawn" class="w-7 h-7 rounded-full bg-[#1c2a3c] text-teal-300 border border-[#354c6c] flex items-center justify-center font-bold" title="Spawn Storm">
                 <i class="fa-solid fa-plus"></i>
@@ -73,7 +78,6 @@
         
         <!-- MAP SECTION -->
         <section class="flex-1 florr-panel flex flex-col overflow-hidden relative min-h-0">
-            <!-- Canvas Wrapper locking aspect ratio -->
             <div class="flex-1 relative bg-[#080d14] overflow-hidden flex items-center justify-center">
                 <canvas id="map" class="w-full h-full block cursor-crosshair"></canvas>
             </div>
@@ -86,22 +90,17 @@
 
         <!-- SIDEBAR: NEWSFEED & RECORDS -->
         <aside class="w-full lg:w-80 flex flex-col gap-2 shrink-0 h-1/2 lg:h-full overflow-hidden">
-            <!-- NEWSFEED -->
             <div class="flex-1 florr-panel flex flex-col overflow-hidden min-h-0">
                 <div class="p-2 bg-[#162130] border-b border-[#283952] flex items-center space-x-2 shrink-0">
-                    <div class="w-8 h-8 rounded-lg bg-[#0b1118] border border-amber-400 flex items-center justify-center font-florr text-amber-300 font-bold">
-                        🌸
-                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-[#0b1118] border border-amber-400 flex items-center justify-center font-florr text-amber-300 font-bold">🌸</div>
                     <div>
                         <div class="font-florr font-bold text-amber-300 text-xs">Florr Mob Weather Council</div>
                         <p class="text-[9px] text-slate-400">Atlantic Tropical Bulletins</p>
                     </div>
                 </div>
-
                 <div id="feed" class="flex-1 p-2 overflow-y-auto space-y-2"></div>
             </div>
 
-            <!-- STATS & HALL OF FAME -->
             <div class="h-36 florr-panel p-2 flex flex-col shrink-0">
                 <div class="font-florr font-bold text-cyan-300 border-b border-[#283952] pb-1 mb-1 flex justify-between">
                     <span>Season Statistics</span>
@@ -130,6 +129,7 @@
         let currentDay = 1;
         let isAuto = false;
         let autoTimer = null;
+        let mapMode = 'track'; // 'track', 'sst', 'radar'
 
         let activeStorms = [];
         let totalNamed = 0, totalHurricanes = 0, totalDamage = 0;
@@ -155,18 +155,23 @@
 
         const COASTLINES = [
             [{lat: 8, lon: -77}, {lat: 12, lon: -83}, {lat: 18, lon: -88}, {lat: 22, lon: -97}, {lat: 29, lon: -94}, {lat: 30, lon: -84}, {lat: 25, lon: -80}, {lat: 35, lon: -75}, {lat: 44, lon: -65}],
-            [{lat: 25, lon: -80}, {lat: 25, lon: -81.5}, {lat: 28, lon: -82.7}, {lat: 30, lon: -84}, {lat: 30, lon: -81}, {lat: 25, lon: -80}], // Florida
-            [{lat: 22.5, lon: -84.5}, {lat: 23, lon: -82}, {lat: 20, lon: -75}, {lat: 21.8, lon: -82}], // Cuba
-            [{lat: 8, lon: -77}, {lat: 11.5, lon: -73}, {lat: 10, lon: -62}, {lat: 6, lon: -58}] // SA
+            [{lat: 25, lon: -80}, {lat: 25, lon: -81.5}, {lat: 28, lon: -82.7}, {lat: 30, lon: -84}, {lat: 30, lon: -81}, {lat: 25, lon: -80}],
+            [{lat: 22.5, lon: -84.5}, {lat: 23, lon: -82}, {lat: 20, lon: -75}, {lat: 21.8, lon: -82}],
+            [{lat: 8, lon: -77}, {lat: 11.5, lon: -73}, {lat: 10, lon: -62}, {lat: 6, lon: -58}]
         ];
 
         function drawMap() {
             if (!width || !height) return;
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = '#09131f';
-            ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = '#182433';
+            if (mapMode === 'sst') {
+                drawSSTHeatmap();
+            } else {
+                ctx.fillStyle = '#09131f';
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            ctx.fillStyle = mapMode === 'sst' ? 'rgba(20, 28, 38, 0.7)' : '#182433';
             ctx.strokeStyle = '#2d4059';
             ctx.lineWidth = 1.5;
 
@@ -183,6 +188,24 @@
             });
 
             activeStorms.forEach(s => drawStorm(s));
+        }
+
+        function drawSSTHeatmap() {
+            const step = 6;
+            for (let y = 0; y < height; y += step) {
+                const lat = 5 + (1 - y / height) * 45;
+                for (let x = 0; x < width; x += step) {
+                    const lon = -100 + (x / width) * 90;
+                    const sst = 22 + Math.sin((currentMonth - 2) / 12 * Math.PI * 2) * 5 + (35 - lat) * 0.4;
+                    
+                    if (sst < 25) ctx.fillStyle = 'rgba(10, 50, 120, 0.6)';
+                    else if (sst < 27.5) ctx.fillStyle = 'rgba(20, 140, 180, 0.6)';
+                    else if (sst < 29) ctx.fillStyle = 'rgba(220, 180, 30, 0.6)';
+                    else ctx.fillStyle = 'rgba(255, 60, 60, 0.6)';
+
+                    ctx.fillRect(x, y, step, step);
+                }
+            }
         }
 
         class Storm {
@@ -202,15 +225,14 @@
                 if (this.status !== 'Active') return;
                 this.lifespanDays++;
 
-                // REALISTIC FORWARD STEERING VELOCITY (0.6 to 1.5 degrees / day)
                 let forwardSpeed = 0.8 + Math.random() * 0.5;
-                let directionAngle = -20; // WNW initial movement
+                let directionAngle = -20;
 
                 if (this.lat > 25 && this.lat < 35) {
-                    directionAngle = 15; // Recurving North/NE
+                    directionAngle = 15;
                     forwardSpeed *= 1.2;
                 } else if (this.lat >= 35) {
-                    directionAngle = 55; // Fast jet stream move NE
+                    directionAngle = 55;
                     forwardSpeed *= 1.8;
                 }
 
@@ -219,17 +241,15 @@
                 this.lat += Math.cos(rad) * forwardSpeed * 0.6;
                 this.history.push({ lat: this.lat, lon: this.lon });
 
-                // INTENSITY DYNAMICS & DECAY
                 const isOverLand = (this.lon < -80 && this.lat > 25 && this.lat < 31) || (this.lon < -75 && this.lat >= 31);
                 
                 if (isOverLand) {
-                    this.wind -= 12; // Rapid land decay
+                    this.wind -= 12;
                     this.damage += Math.floor(Math.pow(this.wind / 30, 2) * 50);
                     totalDamage += Math.floor(Math.pow(this.wind / 30, 2) * 50);
                 } else if (this.lat > 38 || this.lifespanDays > 22) {
-                    this.wind -= 6; // Cold ocean decay & lifespan expiration
+                    this.wind -= 6;
                 } else {
-                    // Warm water intensification
                     const change = Math.floor((Math.random() - 0.42) * 8);
                     this.wind = Math.max(25, this.wind + change);
                 }
@@ -257,8 +277,7 @@
             if (s.status !== 'Active') return;
             const p = latLonToCanvas(s.lat, s.lon);
 
-            // Track Line
-            if (s.history.length > 1) {
+            if (mapMode === 'track' && s.history.length > 1) {
                 ctx.beginPath();
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 1.5;
@@ -270,7 +289,19 @@
                 ctx.stroke();
             }
 
-            // Cyclone Icon
+            if (mapMode === 'radar') {
+                const radius = Math.max(15, s.wind * 0.4);
+                const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, radius);
+                grad.addColorStop(0, 'rgba(0,0,0,0.8)');
+                grad.addColorStop(0.3, '#ff0000');
+                grad.addColorStop(0.7, '#00cc44');
+                grad.addColorStop(1, 'rgba(0,200,200,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
             ctx.fillStyle = s.wind >= 74 ? '#ef4444' : '#06b6d4';
             ctx.beginPath();
             ctx.arc(p.x, p.y, Math.max(5, s.wind / 12), 0, Math.PI * 2);
@@ -282,7 +313,6 @@
         }
 
         function getNextAvailableName() {
-            // BUG FIX: Prevent name collisions with currently active storms
             const activeNames = activeStorms.filter(s => s.status === 'Active').map(s => s.name);
             for (let i = 0; i < activeNameList.length; i++) {
                 const candidate = activeNameList[(nameIndex + i) % activeNameList.length];
@@ -313,7 +343,6 @@
                 }
             }
 
-            // Natural Spawning (Jun-Nov Peak)
             const isPeak = currentMonth >= 5 && currentMonth <= 10;
             if (Math.random() < (isPeak ? 0.12 : 0.02) && activeStorms.filter(s => s.status === 'Active').length < 4) {
                 spawnStorm();
@@ -321,7 +350,6 @@
 
             activeStorms.forEach(s => s.update());
 
-            // Check Retirement
             activeStorms.forEach(s => {
                 if (s.damage >= 5000 && !retiredNames.includes(s.name)) {
                     retiredNames.push(s.name);
@@ -377,21 +405,9 @@
             feed.prepend(card);
         }
 
-        document.getElementById('btn-day').onclick = () => advanceDay();
-        document.getElementById('btn-week').onclick = () => { for(let i=0; i<7; i++) advanceDay(); };
-        document.getElementById('btn-auto').onclick = () => {
-            isAuto = !isAuto;
-            document.getElementById('btn-auto').innerText = isAuto ? 'STOP' : 'AUTO';
-            if (isAuto) autoTimer = setInterval(advanceDay, 300);
-            else clearInterval(autoTimer);
-        };
-        document.getElementById('btn-spawn').onclick = () => spawnStorm();
-
-        window.onload = () => {
-            resize();
-            addFeed('Dandelion', 'Welcome to the updated Florr.io Atlantic Simulator!');
-            updateUI();
-        };
-    </script>
-</body>
-</html>
+        // Mode Toggles
+        ['track', 'sst', 'radar'].forEach(m => {
+            document.getElementById(`mode-${m}`).onclick = () => {
+                mapMode = m;
+                ['track', 'sst', 'radar'].forEach(other => {
+                    document.getEleme
